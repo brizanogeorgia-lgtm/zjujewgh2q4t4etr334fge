@@ -68,25 +68,46 @@
 
 <script>
     function speakText() {
-        // ვიღებთ ტექსტს პარაგრაფიდან
-        const text = document.getElementById('text-to-read').innerText;
+    const text = document.getElementById('text-to-read').innerText;
 
-        // ვამოწმებთ, აქვს თუ არა ბრაუზერს მხარდაჭერა
-        if ('speechSynthesis' in window) {
-            // ვქმნით გაჟღერების ობიექტს
-            const utterance = new SpeechSynthesisUtterance(text);
-            
-            // ენის დაყენება (მაგალითად ინგლისური - "en-US")
-            // შენიშვნა: ქართული ენის მხარდაჭერა დამოკიდებულია თქვენს მოწყობილობაზე
-            utterance.lang = 'ka-GE'; 
+    if ('speechSynthesis' in window) {
+        // ვაჩერებთ წინა საუბარს, თუ რამე ჩართულია
+        window.speechSynthesis.cancel();
 
-            // ტექსტის წარმოთქმა
-            window.speechSynthesis.speak(utterance);
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        // ვცდილობთ ვიპოვოთ ყველა ხელმისაწვდომი ხმა
+        const voices = window.speechSynthesis.getVoices();
+        
+        // ვეძებთ ქართულ ენას (ka-GE)
+        const georgianVoice = voices.find(voice => voice.lang === 'ka-GE' || voice.lang.includes('ka'));
+
+        if (georgianVoice) {
+            utterance.voice = georgianVoice;
+            utterance.lang = 'ka-GE';
         } else {
-            alert("სამწუხაროდ, თქვენს ბრაუზერს არ აქვს ტექსტის გაჟღერების მხარდაჭერა.");
+            // თუ ქართული ვერ იპოვა, სისტემას მაინც ვეუბნებით რომ ენა ქართულია
+            utterance.lang = 'ka-GE';
+            console.warn("ქართული ხმის პაკეტი ვერ მოიძებნა. გამოყენებული იქნება სისტემური ნაგულისხმევი.");
         }
+
+        // პარამეტრები უკეთესი ჟღერადობისთვის
+        utterance.rate = 0.9; // ოდნავ ნელი ტემპი უკეთესი გარკვეულობისთვის
+        utterance.pitch = 1.0; 
+
+        window.speechSynthesis.speak(utterance);
+    } else {
+        alert("თქვენს ბრაუზერს არ აქვს მხარდაჭერა.");
     }
+}
+
+// ზოგჯერ ხმების სია დაგვიანებით იტვირთება, ამიტომ ამას ვამატებთ
+window.speechSynthesis.onvoiceschanged = function() {
+    window.speechSynthesis.getVoices();
+};
+
 </script>
 
 </body>
+
 </html>
